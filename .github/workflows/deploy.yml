@@ -1,0 +1,40 @@
+name: Run BFA STREAM TV Bot 24/7
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *' # 5 မိနစ်တစ်ခါ auto restart
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350 # 6 နာရီနီးပါး run ထားမယ်
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Bot
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          # app.py ကို background ရွှေ့ပြီး run ခိုင်းခြင်း
+          nohup python app.py > bot.log 2>&1 &
+          disown -a
+          
+          echo "Bot started successfully in background..."
+          sleep 10
+          
+          echo "=== BOT LOG ==="
+          cat bot.log
+          
+          echo "Keeping the bot alive..."
+          sleep 340m
+          
